@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Launch Google Chrome directly, independently of xdg defaults
+browser_exec="google-chrome-stable"
+private_flag="--incognito"
+
+exec setsid uwsm-app -- "$browser_exec" "${@/--private/$private_flag}"
