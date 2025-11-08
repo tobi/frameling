@@ -42,8 +42,24 @@ frameling/
 ├── waybar/            # Status bar configuration
 │   ├── config.jsonc   # Waybar modules and layout
 │   └── style.css      # Waybar styling
-├── bin/               # Custom utilities (create as needed)
+├── bin/               # Custom utilities and launcher scripts
+├── environment.d/     # systemd environment configs (symlink to ~/.config/environment.d/)
 └── .claude/           # Claude Code configuration (skills, etc.)
+```
+
+### PATH Configuration
+
+Custom utilities in `bin/` are added to PATH via systemd environment configuration:
+
+- **Config file:** `~/.config/environment.d/frameling.conf`
+- **Repository copy:** `environment.d/frameling.conf` (tracked in git)
+- **Content:** `PATH=$HOME/frameling/bin:$PATH`
+
+The environment.d configuration is read by systemd user session and works for all applications (terminal, graphical, services). Changes take effect on next login or after running `systemctl --user daemon-reload`.
+
+To apply the PATH config from this repository:
+```bash
+ln -sf $HOME/frameling/environment.d/frameling.conf ~/.config/environment.d/frameling.conf
 ```
 
 ## Common Development Tasks
