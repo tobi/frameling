@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Launch or focus web app using browser-home (google-chrome-stable)
+# Usage: webapp-or-focus-home [window-pattern] [url-and-flags...]
+
+if (($# == 0)); then
+  echo "Usage: webapp-or-focus-home [window-pattern] [url-and-flags...]"
+  exit 1
+fi
+
+WINDOW_PATTERN="$1"
+shift
+URL="$1"
+shift
+
+# Search for existing window matching the pattern
+WINDOW_ADDRESS=$(hyprctl clients -j | jq -r --arg p "$WINDOW_PATTERN" '.[]|select((.class|test("\\b" + $p + "\\b";"i")) or (.title|test("\\b" + $p + "\\b";"i")))|.address' | head -n1)
+
+if [[ -n $WINDOW_ADDRESS ]]; then
+  # Window exists, focus it
+  hyprctl dispatch focuswindow "address:$WINDOW_ADDRESS"
+else
+  # Window doesn't exist, launch using google-chrome-stable
+  exec setsid uwsm-app -- google-chrome-stable --app="$URL" "$@"
+fi
