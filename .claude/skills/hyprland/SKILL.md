@@ -39,6 +39,38 @@ The script searches across:
 - Window rules
 - Monitor configuration
 
+**How it works:** The search script uses local markdown documentation files stored in `references/docs/` that were downloaded from the official Hyprland wiki using the jina.ai markdown converter (`https://r.jina.ai/$URL`). This provides:
+- **Fast offline access** - No network calls needed
+- **Clean markdown format** - Easy to read and parse
+- **Up-to-date content** - Downloaded from wiki.hypr.land
+
+## Documentation Index
+
+The skill includes complete local copies of official Hyprland documentation:
+
+| Section | File | Source |
+|---------|------|--------|
+| Variables | `references/docs/variables.md` | [wiki.hypr.land/Configuring/Variables/](https://wiki.hypr.land/Configuring/Variables/) |
+| Keywords | `references/docs/keywords.md` | [wiki.hypr.land/Configuring/Keywords/](https://wiki.hypr.land/Configuring/Keywords/) |
+| Binds | `references/docs/binds.md` | [wiki.hypr.land/Configuring/Binds/](https://wiki.hypr.land/Configuring/Binds/) |
+| Animations | `references/docs/animations.md` | [wiki.hypr.land/Configuring/Animations/](https://wiki.hypr.land/Configuring/Animations/) |
+| Dispatchers | `references/docs/dispatchers.md` | [wiki.hypr.land/Configuring/Dispatchers/](https://wiki.hypr.land/Configuring/Dispatchers/) |
+| Window Rules | `references/docs/window-rules.md` | [wiki.hypr.land/Configuring/Window-Rules/](https://wiki.hypr.land/Configuring/Window-Rules/) |
+| Monitors | `references/docs/monitors.md` | [wiki.hypr.land/Configuring/Monitors/](https://wiki.hypr.land/Configuring/Monitors/) |
+
+**Updating documentation:** To refresh the local docs with the latest from the wiki:
+
+```bash
+cd references/docs
+curl -s "https://r.jina.ai/https://wiki.hypr.land/Configuring/Variables/" -o variables.md
+curl -s "https://r.jina.ai/https://wiki.hypr.land/Configuring/Keywords/" -o keywords.md
+curl -s "https://r.jina.ai/https://wiki.hypr.land/Configuring/Binds/" -o binds.md
+curl -s "https://r.jina.ai/https://wiki.hypr.land/Configuring/Animations/" -o animations.md
+curl -s "https://r.jina.ai/https://wiki.hypr.land/Configuring/Dispatchers/" -o dispatchers.md
+curl -s "https://r.jina.ai/https://wiki.hypr.land/Configuring/Window-Rules/" -o window-rules.md
+curl -s "https://r.jina.ai/https://wiki.hypr.land/Configuring/Monitors/" -o monitors.md
+```
+
 ## Configuration Workflow
 
 ### 1. Understanding the Request
