@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Launch web app using browser-home (google-chrome-stable)
+# Usage: webapp-home [url-and-flags...]
+
+if (($# == 0)); then
+  echo "Usage: webapp-home [url-and-flags...]"
+  exit 1
+fi
+
+# Always use google-chrome-stable (via browser-home behavior)
+exec setsid uwsm-app -- google-chrome-stable --app="$1" "${@:2}"
