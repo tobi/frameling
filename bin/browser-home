@@ -4,4 +4,4 @@
 browser_exec="google-chrome-stable"
 private_flag="--incognito"
 
-exec setsid uwsm-app -- "$browser_exec" "${@/--private/$private_flag}"
+exec setsid uwsm-app -- "$browser_exec" --disable-features=InfiniteSessionRestore "${@/--private/$private_flag}"
