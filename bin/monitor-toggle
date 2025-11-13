@@ -1,0 +1,52 @@
+#!/bin/bash
+set -eEo pipefail
+
+# Toggle monitor by line number in monitors.conf
+# Usage: monitor-toggle 1  (toggles first monitor)
+#        monitor-toggle 2  (toggles second monitor)
+#        monitor-toggle 1 --dry-run  (test without executing)
+
+DRY_RUN=false
+NUM=$1
+
+# Parse arguments
+if [[ "$2" == "--dry-run" ]] || [[ "$1" == "--dry-run" ]]; then
+    DRY_RUN=true
+    [[ "$1" == "--dry-run" ]] && NUM=${2:-1} || NUM=${1:-1}
+fi
+
+NUM=${NUM:-1}
+MONITORS_CONF="$HOME/frameling/hypr/monitors.conf"
+
+# Get the Nth monitor line from config
+MONITOR_LINE=$(grep -e "^monitor = " "$MONITORS_CONF" | sed -n "${NUM}p")
+
+if [[ -z "$MONITOR_LINE" ]]; then
+    echo "Error: No monitor found at line $NUM"
+    exit 1
+fi
+
+# Extract everything after "monitor = "
+MONITOR_CONFIG="${MONITOR_LINE#monitor = }"
+
+# Get the monitor name (first field before comma)
+MONITOR_NAME="${MONITOR_CONFIG%%,*}"
+
+# Check if monitor is currently active
+if hyprctl monitors | grep -q "^Monitor $MONITOR_NAME"; then
+    # Monitor is enabled, disable it
+    echo "Disabling $MONITOR_NAME"
+    if [[ "$DRY_RUN" == "false" ]]; then
+        hyprctl keyword monitor "$MONITOR_NAME,disable"
+    else
+        echo "[DRY-RUN] Would run: hyprctl keyword monitor \"$MONITOR_NAME,disable\""
+    fi
+else
+    # Monitor is disabled, enable it with original config
+    echo "Enabling $MONITOR_NAME"
+    if [[ "$DRY_RUN" == "false" ]]; then
+        hyprctl keyword monitor "$MONITOR_CONFIG"
+    else
+        echo "[DRY-RUN] Would run: hyprctl keyword monitor \"$MONITOR_CONFIG\""
+    fi
+fi
