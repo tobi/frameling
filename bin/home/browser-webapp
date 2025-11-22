@@ -1,0 +1,27 @@
+#!/bin/bash
+set -eEo pipefail
+
+# Validate arguments
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <app-name> <url> [additional-args...]" >&2
+    exit 1
+fi
+
+app=$1
+url=$2
+shift 2
+
+# Validate that browser script exists
+if [ ! -x "./browser" ]; then
+    echo "Error: ./browser script not found or not executable" >&2
+    exit 1
+fi
+
+# Validate URL format (basic check)
+if [[ ! "$url" =~ ^https?:// ]]; then
+    echo "Error: URL must start with http:// or https://" >&2
+    exit 1
+fi
+
+# Launch browser in app mode
+exec ./browser --app="$url" --class="$app" "$@"

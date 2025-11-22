@@ -85,3 +85,4 @@ fi
 # Give up if nothing found
 echo -e "\e[31mError:\e[0m Application not found: $target"
 exit 1
+

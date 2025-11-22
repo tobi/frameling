@@ -1,0 +1,17 @@
+#!/bin/bash
+#set -eEo pipefail
+
+
+# Get default browser from system
+default_browser=$(xdg-settings get default-web-browser)
+
+# Configuration
+cache_dir="$HOME/.config/google-chrome-global"
+profile_name="Default"  # Displays as "Work" in Chrome UI
+
+browser_exec=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' ~/.local/share/applications/$default_browser ~/.nix-profile/share/applications/$default_browser /usr/share/applications/$default_browser 2>/dev/null | head -1)
+
+set -x 
+
+# Launch browser with proper session handling through uwsm-app
+exec setsid uwsm-app -- "$browser_exec" --user-data-dir=$cache_dir --disable-features=InfiniteSessionRestore --profile-directory="$profile_name" $@

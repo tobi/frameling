@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -eEo pipefail
+
+# Validate arguments
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <url> [additional-args...]" >&2
+    exit 1
+fi
+
+url=$1
+shift
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BROWSER="$SCRIPT_DIR/browser"
+
+# Validate that browser script exists
+if [ ! -x "$BROWSER" ]; then
+    echo "Error: $BROWSER script not found or not executable" >&2
+    exit 1
+fi
+
+# Validate URL format (basic check)
+if [[ ! "$url" =~ ^https?:// ]]; then
+    echo "Error: URL must start with http:// or https://" >&2
+    exit 1
+fi
+
+# Extract hostname for class name
+u="$url"
+h="${u#*://}"   # drop scheme
+h="${h%%/*}"    # drop path
+class="chrome-${h}__"
+
+# Check if window with this class already exists
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || pgrep -x Hyprland >/dev/null 2>&1; then
+    # Get window address for this class (match prefix)
+    window_id=$(hyprctl clients -j 2>/dev/null | jq -r --arg class "$class" '
+        map(select(.class | startswith($class))) | .[0].address // empty
+    ' || echo "")
+
+    if [[ -n "$window_id" ]]; then
+        # Window exists - focus it
+        echo "Focusing existing window for $h (class: $class)"
+        hyprctl dispatch focuswindow "address:$window_id"
+        exit 0
+    fi
+fi
+
+# No window found - launch browser in app mode
+echo "Launching new browser window for $h (class: $class)"
+exec "$BROWSER" --app="$url" --class="$class" "$@"
