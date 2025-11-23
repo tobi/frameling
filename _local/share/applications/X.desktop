@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=X.com
+Exec=webapp-launcher %u
+Hotkey=Super+Shift+X
+Profile=Profile 1
+Class=chrome-x.com__-Profile 1
+URL=https://x.com

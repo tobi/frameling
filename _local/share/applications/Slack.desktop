@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Slack
+Exec=webapp-launcher %u
+Hotkey=Super+Shift+S
+Profile=Profile 2
+Class=chrome-app.slack.com__-Profile 2
+URL=https://app.slack.com/client

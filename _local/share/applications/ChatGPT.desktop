@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ChatGPT
+Exec=webapp-launcher %u
+Hotkey=Super+Shift+A
+Profile=Profile 1
+Class=chrome-chatgpt.com__-Default
+URL=https://chatgpt.com

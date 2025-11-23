@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Meet
+Exec=webapp-launcher %u
+Hotkey=Super+Shift+E
+Profile=Profile 2
+Class=chrome-meet.google.com__-Profile 2
+URL=https://meet.google.com

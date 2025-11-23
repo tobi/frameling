@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Gmail
+Exec=webapp-launcher %u
+Hotkey=Super+Shift+G
+Profile=Profile 2
+Class=chrome-mail.google.com__-Profile 2
+URL=https://mail.google.com

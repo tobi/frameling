@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+set -eEo pipefail
+
+# Webapp launcher that reads parameters from .desktop files
+# Usage: webapp-launcher <desktop-file>
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <desktop-file>" >&2
+    exit 1
+fi
+
+webapp_file="$1"
+
+# Validate webapp file exists
+if [ ! -f "$webapp_file" ]; then
+    echo "Error: Desktop file '$webapp_file' not found" >&2
+    exit 1
+fi
+
+# Parse the desktop file
+name=$(grep '^Name=' "$webapp_file" | cut -d'=' -f2-)
+profile=$(grep '^Profile=' "$webapp_file" | cut -d'=' -f2-)
+class=$(grep '^Class=' "$webapp_file" | cut -d'=' -f2-)
+url=$(grep '^URL=' "$webapp_file" | cut -d'=' -f2-)
+
+# Validate required fields
+if [ -z "$name" ] || [ -z "$url" ]; then
+    echo "Error: Desktop file missing required fields (Name, URL)" >&2
+    exit 1
+fi
+
+# Get default browser from system
+default_browser=$(xdg-settings get default-web-browser 2>/dev/null)
+if [ -z "$default_browser" ]; then
+    echo "Error: Could not determine default browser" >&2
+    exit 1
+fi
+
+# Configuration
+cache_dir="$HOME/.config/google-chrome-global"
+
+# Select profile based on desktop file profile
+case "$profile" in
+    "Profile 1")
+        profile_name="Default"
+        ;;
+    "Profile 2")
+        profile_name="Profile 2"
+        ;;
+    *)
+        profile_name="$profile"
+        ;;
+esac
+
+# Build profile argument if profile is specified
+profile_arg=""
+if [ -n "$profile" ]; then
+    profile_arg="--profile-directory=\"$profile_name\""
+fi
+
+class_arg=""
+if [ -n "$class" ]; then
+    class_arg="--class=\"$class\""
+fi
+
+# Find browser executable
+browser_exec=""
+for path in ~/.local/share/applications/$default_browser ~/.nix-profile/share/applications/$default_browser /usr/share/applications/$default_browser; do
+    if [ -f "$path" ]; then
+        browser_exec=$(grep -h '^Exec=' "$path" 2>/dev/null | head -1 | sed 's/^Exec=\([^ ]*\).*/\1/')
+        if [ -n "$browser_exec" ]; then
+            break
+        fi
+    fi
+done
+if [ -z "$browser_exec" ]; then
+    echo "Error: Could not find browser executable for $default_browser" >&2
+    exit 1
+fi
+
+# Check if window with this class already exists (only if class is specified)
+if [ -n "$class" ] && { [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || pgrep -x Hyprland >/dev/null 2>&1; }; then
+    # Get window address for this class (exact match)
+    window_id=$(hyprctl clients -j 2>/dev/null | jq -r --arg class "$class" 'map(select(.class == $class)) | .[0].address // empty' 2>/dev/null || echo "")
+
+    if [[ -n "$window_id" ]] && [[ "$window_id" != "null" ]]; then
+        # Window exists - focus it
+        echo "Focusing existing window for $name (class: $class)"
+        hyprctl dispatch focuswindow "address:$window_id"
+        exit 0
+    fi
+fi
+
+# No window found - launch browser in app mode
+if [ -n "$class" ]; then
+    echo "Launching new browser window for $name (class: $class)"
+else
+    echo "Launching new browser window for $name"
+fi
+hyprctl dispatch exec "$browser_exec --user-data-dir=$cache_dir --disable-features=InfiniteSessionRestore $profile_arg --app=\"$url\" $class_arg"
