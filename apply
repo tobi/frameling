@@ -1,0 +1,192 @@
+#!/bin/bash
+set -eEo pipefail
+
+# Apply script for frameling configuration
+# Symlinks files from _* directories to corresponding $HOME locations with _ -> .
+
+FRAMELING_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DRY_RUN=false
+
+# Track processed directories to avoid duplicate operations
+declare -A PROCESSED_DIRS
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        *)
+            echo "Usage: $0 [--dry-run]"
+            exit 1
+            ;;
+    esac
+done
+
+if $DRY_RUN; then
+    echo "DRY RUN MODE - No changes will be made"
+fi
+
+# Function to compute target path
+get_target_path() {
+    local source_path="$1"
+    # Remove frameling dir prefix and replace _ with .
+    local relative_path="${source_path#$FRAMELING_DIR/}"
+    local target_path="$HOME/${relative_path/_/.}"
+    echo "$target_path"
+}
+
+# Function to ensure directory exists, moving conflicts to _backup
+ensure_directory() {
+    local dir_path="$1"
+
+    # Check if already processed
+    if [[ ${PROCESSED_DIRS[$dir_path]} ]]; then
+        return 0
+    fi
+
+    local parent_dir="$(dirname "$dir_path")"
+
+    # Ensure parent directory exists first
+    if [[ "$parent_dir" != "$HOME" ]]; then
+        ensure_directory "$parent_dir"
+    fi
+
+    if [[ -e "$dir_path" || -L "$dir_path" ]]; then
+        if [[ -d "$dir_path" && ! -L "$dir_path" ]]; then
+            # Real directory exists, good
+            PROCESSED_DIRS[$dir_path]=1
+            return 0
+        else
+            # File or symlink exists where directory should be
+            local type_desc
+            if [[ -L "$dir_path" ]]; then
+                type_desc="symlink"
+            else
+                type_desc="file"
+            fi
+            local backup_path="${dir_path}_backup"
+            if $DRY_RUN; then
+                echo "Would move $dir_path to $backup_path ($type_desc in place of directory)"
+            else
+                echo "Moving $dir_path to $backup_path ($type_desc in place of directory)"
+                read -p "Confirm? (y/N): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    mv "$dir_path" "$backup_path"
+                    echo "Moved $dir_path to $backup_path"
+                else
+                    echo "Skipped moving $dir_path"
+                    # Don't create directory if we didn't move the conflict
+                    return 1
+                fi
+            fi
+        fi
+    fi
+
+    # Create directory
+    if $DRY_RUN; then
+        echo "Would create directory $dir_path"
+    else
+        mkdir -p "$dir_path"
+    fi
+
+    PROCESSED_DIRS[$dir_path]=1
+}
+
+# Function to create symlink
+create_symlink() {
+    local source_file="$1"
+    local target_file="$2"
+
+    # Ensure target directory exists
+    local target_dir="$(dirname "$target_file")"
+    ensure_directory "$target_dir"
+
+    if [[ -L "$target_file" ]]; then
+        # Check if it's already pointing to the right place
+        local current_target="$(readlink "$target_file")"
+        if [[ "$current_target" == "$source_file" ]]; then
+            if $DRY_RUN; then
+                echo "Symlink $target_file already correct"
+            fi
+            return 0
+        else
+            # Symlink exists but points to wrong place
+            local backup_path="${target_file}_backup"
+            if $DRY_RUN; then
+                echo "Would move $target_file to $backup_path (symlink points to wrong target: $current_target)"
+            else
+                echo "Moving $target_file to $backup_path (symlink points to wrong target: $current_target)"
+                read -p "Confirm? (y/N): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    mv "$target_file" "$backup_path"
+                    echo "Moved $target_file to $backup_path"
+                else
+                    echo "Skipped moving $target_file"
+                    return 0  # Don't create symlink if we didn't move the conflict
+                fi
+            fi
+        fi
+    elif [[ -e "$target_file" ]]; then
+        # Something else exists, move to backup
+        local type_desc
+        if [[ -f "$target_file" ]]; then
+            type_desc="file"
+        elif [[ -d "$target_file" ]]; then
+            type_desc="directory"
+        else
+            type_desc="other"
+        fi
+        local backup_path="${target_file}_backup"
+        if $DRY_RUN; then
+            echo "Would move $target_file to $backup_path (existing $type_desc)"
+        else
+            echo "Moving $target_file to $backup_path (existing $type_desc)"
+            read -p "Confirm? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                mv "$target_file" "$backup_path"
+                echo "Moved $target_file to $backup_path"
+            else
+                echo "Skipped moving $target_file"
+                return 0  # Don't create symlink if we didn't move the conflict
+            fi
+        fi
+    fi
+
+    # Create symlink
+    if $DRY_RUN; then
+        echo "Would create symlink: $target_file -> $source_file"
+    else
+        ln -s "$source_file" "$target_file"
+        echo "Created symlink: $target_file -> $source_file"
+    fi
+}
+
+# Find all directories starting with _
+DIRS=()
+while IFS= read -r -d '' dir; do
+    DIRS+=("$dir")
+done < <(find "$FRAMELING_DIR" -type d -name "_*" -print0)
+
+for dir in "${DIRS[@]}"; do
+    # Find all files in this directory recursively
+    FILES=()
+    while IFS= read -r -d '' file; do
+        FILES+=("$file")
+    done < <(find "$dir" -not -type d -print0)
+
+    for file in "${FILES[@]}"; do
+        target_file="$(get_target_path "$file")"
+        create_symlink "$file" "$target_file"
+    done
+done
+
+if $DRY_RUN; then
+    echo "DRY RUN COMPLETE - No changes made"
+else
+    echo "Apply complete"
+fi
