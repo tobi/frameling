@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Google Slides
+Exec=webapp-launcher %u
+Hotkey=Super+Shift+P
+Profile=Profile 2
+Class=chrome-app.docs.google.com__-Profile 2
+URL=https://docs.google.com/presentation/

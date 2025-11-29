@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Google Docs
+Exec=webapp-launcher %u
+Hotkey=Super+Shift+J
+Profile=Profile 2
+Class=chrome-docs.google.com__document_-Profile_2
+URL=https://docs.google.com/document/

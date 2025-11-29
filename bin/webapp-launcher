@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eEo pipefail
-
+set -x 
 # Webapp launcher that reads parameters from .desktop files
 # Usage: webapp-launcher <desktop-file>
 
@@ -37,7 +37,7 @@ if [ -z "$default_browser" ]; then
 fi
 
 # Configuration
-cache_dir="$HOME/.config/google-chrome-global"
+cache_dir="$HOME/.config/google-chrome"
 
 # Select profile based on desktop file profile
 case "$profile" in
