@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -28,22 +28,28 @@ This repository mirrors the user override layer (`~/.config/`).
 
 ```
 frameling/
-├── hypr/              # Hyprland window manager config
-│   ├── hyprland.conf  # Main entry, sources other files
-│   ├── monitors.conf  # Display configuration
-│   ├── input.conf     # Touchpad, keyboard settings
-│   ├── bindings.conf  # Keybindings
-│   ├── looknfeel.conf # Animations, decorations, shadows
-│   ├── autostart.conf # Startup applications
-│   ├── envs.conf      # Environment variables
-│   ├── hypr*.conf     # hypridle, hyprlock, hyprsunset
-│   ├── shaders/       # GLSL shaders for visual effects
-│   └── AGENTS.md      # Development guidelines (reference this!)
-├── waybar/            # Status bar configuration
-│   ├── config.jsonc   # Waybar modules and layout
-│   └── style.css      # Waybar styling
+├── _config/           # User configuration overrides
+│   ├── hypr/          # Hyprland window manager config
+│   │   ├── hyprland.conf  # Main entry, sources other files
+│   │   ├── monitors.conf  # Display configuration
+│   │   ├── input.conf     # Touchpad, keyboard settings
+│   │   ├── bindings.conf  # Keybindings
+│   │   ├── looknfeel.conf # Animations, decorations, shadows
+│   │   ├── autostart.conf # Startup applications
+│   │   ├── envs.conf      # Environment variables
+│   │   ├── hypr*.conf     # hypridle, hyprlock, hyprsunset
+│   │   ├── shaders/       # GLSL shaders for visual effects
+│   │   └── AGENTS.md      # Development guidelines (reference this!)
+│   ├── waybar/        # Status bar configuration
+│   │   ├── config.jsonc   # Waybar modules and layout
+│   │   └── style.css      # Waybar styling
+│   ├── mako/          # Notification daemon config
+│   ├── uwsm/          # Universal Wayland Session Manager config
+│   └── environment.d/ # systemd environment configs (symlink to ~/.config/environment.d/)
+├── _local/            # Local user data
+│   └── share/
+│       └── applications/  # Desktop application shortcuts
 ├── bin/               # Custom utilities and launcher scripts
-├── environment.d/     # systemd environment configs (symlink to ~/.config/environment.d/)
 └── .claude/           # Claude Code configuration (skills, etc.)
 ```
 
@@ -52,14 +58,14 @@ frameling/
 Custom utilities in `bin/` are added to PATH via systemd environment configuration:
 
 - **Config file:** `~/.config/environment.d/frameling.conf`
-- **Repository copy:** `environment.d/frameling.conf` (tracked in git)
+- **Repository copy:** `_config/environment.d/frameling.conf` (tracked in git)
 - **Content:** `PATH=$HOME/frameling/bin:$PATH`
 
 The environment.d configuration is read by systemd user session and works for all applications (terminal, graphical, services). Changes take effect on next login or after running `systemctl --user daemon-reload`.
 
 To apply the PATH config from this repository:
 ```bash
-ln -sf $HOME/frameling/environment.d/frameling.conf ~/.config/environment.d/frameling.conf
+ln -sf $HOME/frameling/_config/environment.d/frameling.conf ~/.config/environment.d/frameling.conf
 ```
 
 ## Common Development Tasks
@@ -118,7 +124,7 @@ hyprctl clients
 
 ### Making Changes Workflow
 
-1. **Make changes** to config files in this repository (hypr/, waybar/, etc.)
+1. **Make changes** to config files in this repository (_config/hypr/, _config/waybar/, etc.)
 2. **Test changes** using `hyprctl reload` or `omarchy-refresh-*` commands
 3. **Verify** with `hyprctl configerrors` or by testing functionality
 4. **Commit changes** with git using a concise summary of the changes
@@ -130,7 +136,7 @@ After making configuration changes:
 
 ```bash
 # Stage relevant files
-git add hypr/monitors.conf hypr/looknfeel.conf  # Example
+git add _config/hypr/monitors.conf _config/hypr/looknfeel.conf  # Example
 
 # Commit with summary
 git commit -m "Update monitor layout and animation speeds"
@@ -172,7 +178,7 @@ All binaries are in `~/.local/share/omarchy/bin/`
 
 ## Hyprland Configuration Guidelines
 
-**IMPORTANT:** Read `hypr/AGENTS.md` for detailed Hyprland development guidelines.
+**IMPORTANT:** Read `_config/hypr/AGENTS.md` for detailed Hyprland development guidelines.
 
 ### Configuration Structure
 
@@ -197,7 +203,7 @@ Group bindings by function (applications, utilities, media)
 - **Curves:** `default` or `easeOutQuint` for smooth deceleration
 - **Shadows:** Range 4-8, render power 3-5, use rgba with low opacity
 
-See `hypr/AGENTS.md` for detailed animation configuration guidelines.
+See `_config/hypr/AGENTS.md` for detailed animation configuration guidelines.
 
 ### GLSL Shaders
 
@@ -258,6 +264,6 @@ Skills are located in `.claude/skills/`
 1. **Never edit Omarchy defaults directly** (`~/.local/share/omarchy/default/`)
 2. **Always test before committing** - Use `hyprctl reload` and `hyprctl configerrors`
 3. **Check debug log** for system issues: `/tmp/omarchy-debug.log`
-4. **Reference AGENTS.md** in subdirectories (e.g., `hypr/AGENTS.md`) for component-specific guidelines
+4. **Reference AGENTS.md** in subdirectories (e.g., `_config/hypr/AGENTS.md`) for component-specific guidelines
 5. **Use Omarchy CLI tools** - They handle refresh/reload operations correctly
 6. **Commit frequently** with clear, concise messages about configuration changes
