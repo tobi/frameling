@@ -5,5 +5,5 @@ Name=Calendar
 Exec=webapp-launcher %u
 Hotkey=Super+Shift+C
 Profile=Profile 2
-Class=chrome-calendar.google.com__-Profile 2
+Class=chrome-calendar.google.com__-Profile_2
 URL=https://calendar.google.com

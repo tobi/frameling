@@ -5,5 +5,5 @@ Name=Shopify Chat
 Exec=webapp-launcher %u
 Hotkey=Super+Shift+Alt+A
 Profile=Profile 1
-Class=chrome-chat.shopify.io__-Profile 1
+Class=chrome-chat.shopify.io__-Profile_1
 URL=https://chat.shopify.io

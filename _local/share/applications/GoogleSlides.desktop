@@ -5,5 +5,5 @@ Name=Google Slides
 Exec=webapp-launcher %u
 Hotkey=Super+Shift+P
 Profile=Profile 2
-Class=chrome-app.docs.google.com__-Profile 2
+Class=chrome-app.docs.google.com__presentation_-Profile_2
 URL=https://docs.google.com/presentation/
