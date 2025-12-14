@@ -1,20 +1,10 @@
 #!/bin/bash
-# GPU Temperature script for Waybar
+# GPU Temperature script for Waybar - Optimized for minimal resource usage
 
-# Try to get GPU temperature from AMD GPU
-# First try using sensors command
-if command -v sensors >/dev/null 2>&1; then
-    gpu_temp=$(sensors | grep -i "junction\|edge" | head -1 | awk '{print $2}' | sed 's/+//' | sed 's/°C//')
-    if [ -n "$gpu_temp" ] && [ "$gpu_temp" != "0.0" ]; then
-        echo "{\"text\": \"$gpu_temp°C\", \"tooltip\": \"GPU Temperature: $gpu_temp°C\"}"
-        exit 0
-    fi
-fi
-
-# Fallback: try reading from hwmon for AMD GPU
-for hwmon in /sys/class/drm/card*/device/hwmon/*; do
-    if [ -f "$hwmon/temp1_input" ]; then
-        gpu_temp=$(cat "$hwmon/temp1_input" 2>/dev/null)
+# Direct hwmon access (most efficient) - try AMD GPU first
+for hwmon in /sys/class/drm/card*/device/hwmon/hwmon*/temp1_input; do
+    if [ -f "$hwmon" ]; then
+        gpu_temp=$(cat "$hwmon" 2>/dev/null)
         if [ -n "$gpu_temp" ] && [ "$gpu_temp" -gt 0 ]; then
             gpu_temp=$((gpu_temp / 1000))
             echo "{\"text\": \"$gpu_temp°C\", \"tooltip\": \"GPU Temperature: $gpu_temp°C\"}"
@@ -22,6 +12,16 @@ for hwmon in /sys/class/drm/card*/device/hwmon/*; do
         fi
     fi
 done
+
+# Fallback: sensors command (only if hwmon fails)
+if command -v sensors >/dev/null 2>&1; then
+    # Use more efficient grep pattern and avoid multiple sed calls
+    gpu_temp=$(sensors 2>/dev/null | grep -m1 -E "(junction|edge)" | sed -n 's/.*+\([0-9.]*\)°C.*/\1/p')
+    if [ -n "$gpu_temp" ] && [ "$gpu_temp" != "0.0" ]; then
+        echo "{\"text\": \"$gpu_temp°C\", \"tooltip\": \"GPU Temperature: $gpu_temp°C\"}"
+        exit 0
+    fi
+fi
 
 # If no GPU temperature found
 echo "{\"text\": \"N/A\", \"tooltip\": \"GPU temperature unavailable\"}"

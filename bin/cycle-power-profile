@@ -1,0 +1,19 @@
+#!/bin/bash
+# Power profile cycling script
+
+current_profile=$(powerprofilesctl get 2>/dev/null)
+
+case "$current_profile" in
+    "balanced")
+        powerprofilesctl set power-saver
+        ;;
+    "power-saver")
+        powerprofilesctl set performance
+        ;;
+    "performance")
+        powerprofilesctl set balanced
+        ;;
+    *)
+        powerprofilesctl set balanced
+        ;;
+esac

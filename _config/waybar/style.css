@@ -36,8 +36,7 @@
 #custom-omarchy,
 #custom-screenrecording-indicator,
 #custom-update,
-#custom-cpu-temp,
-#custom-gpu-temp {
+#custom-temp-power {
   min-width: 12px;
   margin: 0 7.5px;
 }
