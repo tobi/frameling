@@ -1,5 +1,12 @@
 #!/bin/bash
-# Combined CPU/GPU Temperature and Power Profile script for Waybar
+# Combined CPU/GPU Temperature and Power Profile script for Waybar with history tracking
+
+HISTORY_FILE="/tmp/waybar_temp_history"
+THROTTLE_FILE="/tmp/waybar_throttle_history"
+MAX_HISTORY_MINUTES=5
+
+# Get current timestamp
+current_time=$(date +%s)
 
 # Get CPU temperature
 cpu_temp=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo "0")
@@ -22,6 +29,39 @@ if [ -z "$gpu_temp" ] && command -v sensors >/dev/null 2>&1; then
     gpu_temp=$(sensors 2>/dev/null | grep -m1 -E "(junction|edge)" | sed -n 's/.*+\([0-9.]*\)°C.*/\1/p' | cut -d'.' -f1)
 fi
 
+# Check for thermal throttling (AMD systems)
+throttled_recently=false
+if [ -d "/sys/devices/system/cpu/cpu0/thermal_throttle" ]; then
+    # Check if any CPU core has been throttled in the last minute
+    for cpu in /sys/devices/system/cpu/cpu*/thermal_throttle/core_throttled_time; do
+        if [ -f "$cpu" ]; then
+            throttle_time=$(cat "$cpu" 2>/dev/null || echo "0")
+            if [ "$throttle_time" -gt 0 ]; then
+                throttled_recently=true
+                break
+            fi
+        fi
+    done
+fi
+
+# Store temperature history
+echo "$current_time $cpu_temp $gpu_temp $throttled_recently" >> "$HISTORY_FILE"
+
+# Clean old entries (older than MAX_HISTORY_MINUTES)
+cutoff_time=$((current_time - MAX_HISTORY_MINUTES * 60))
+temp_file=$(mktemp)
+awk -v cutoff="$cutoff_time" '$1 >= cutoff' "$HISTORY_FILE" > "$temp_file"
+mv "$temp_file" "$HISTORY_FILE"
+
+# Calculate 5-minute max values
+if [ -f "$HISTORY_FILE" ]; then
+    cpu_max=$(awk 'NR==1{max=$2} $2>max{max=$2} END{print max}' "$HISTORY_FILE")
+    gpu_max=$(awk 'NR==1{max=$3} $3>max{max=$3} END{print max}' "$HISTORY_FILE")
+else
+    cpu_max=$cpu_temp
+    gpu_max=$gpu_temp
+fi
+
 # Get current power profile
 power_profile=$(powerprofilesctl get 2>/dev/null || echo "unknown")
 
@@ -34,7 +74,24 @@ if [ "$cpu_temp" -ge 50 ] || [ "$gpu_temp" -ge 50 ]; then
     # Capitalize first letter of power profile
     profile_display="$(echo "$power_profile" | sed 's/power-saver/Power Saver/; s/balanced/Balanced/; s/performance/Performance/')"
 
-    echo "{\"text\": \"CPU:$cpu_display GPU:$gpu_display [$profile_display]\", \"tooltip\": \"CPU: $cpu_temp°C\\nGPU: ${gpu_temp:-N/A}°C\\nProfile: $profile_display\"}"
+    # Build tooltip with history and throttling info
+    tooltip="CPU: $cpu_temp°C (5min max: ${cpu_max}°C)\\n"
+    tooltip+="GPU: ${gpu_temp:-N/A}°C (5min max: ${gpu_max:-N/A}°C)\\n"
+    tooltip+="Profile: $profile_display\\n"
+
+    # Add throttling warning if applicable
+    if [ "$throttled_recently" = true ]; then
+        tooltip+="\\n⚠️  Thermal throttling detected recently"
+    fi
+
+    # Color coding for throttling
+    if [ "$throttled_recently" = true ]; then
+        text_class="warning"
+    else
+        text_class="normal"
+    fi
+
+    echo "{\"text\": \"CPU:$cpu_display GPU:$gpu_display [$profile_display]\", \"tooltip\": \"$tooltip\", \"class\": \"$text_class\"}"
 else
     # Hide the module when temperatures are low
     echo "{\"text\": \"\", \"tooltip\": \"\"}"
