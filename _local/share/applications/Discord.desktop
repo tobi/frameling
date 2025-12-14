@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=WhatsApp
+Exec=webapp-launcher %u
+Hotkey=Super+Shift+D
+Profile=Profile 1
+Class=chrome-discord.com_app__-Profile_1
+URL=https://discord.com/app
+

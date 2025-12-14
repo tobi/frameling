@@ -4,9 +4,10 @@ set -eEo pipefail
 # Generate Hyprland bindings from .desktop files
 # This script reads .desktop files and generates bindings.generated.conf
 
-FRAMELING_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FRAMELING_DIR="$(dirname "$SCRIPT_DIR")"
 DESKTOP_DIR="$FRAMELING_DIR/_local/share/applications"
-OUTPUT_FILE="$FRAMELING_DIR/_config/hypr/bindings.generated.conf"
+OUTPUT_FILE="$FRAMELING_DIR/_config/hypr\$/bindings.generated.conf"
 
 # Function to convert hotkey format from .desktop to Hyprland
 convert_hotkey() {

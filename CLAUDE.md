@@ -29,7 +29,7 @@ This repository mirrors the user override layer (`~/.config/`).
 ```
 frameling/
 ├── _config/           # User configuration overrides
-│   ├── hypr/          # Hyprland window manager config
+│   ├── hypr$/         # Hyprland window manager config (symlinked as ~/.config/hypr)
 │   │   ├── hyprland.conf  # Main entry, sources other files
 │   │   ├── monitors.conf  # Display configuration
 │   │   ├── input.conf     # Touchpad, keyboard settings
@@ -52,6 +52,8 @@ frameling/
 ├── bin/               # Custom utilities and launcher scripts
 └── .claude/           # Claude Code configuration (skills, etc.)
 ```
+
+**Directory naming convention:** Directories ending with `$` (like `hypr$`) indicate they are symlinked to their corresponding location in `~/.config/`. For example, `~/.config/hypr` is symlinked to `$HOME/frameling/_config/hypr$/`.
 
 ### PATH Configuration
 
