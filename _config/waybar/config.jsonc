@@ -12,6 +12,8 @@
     "network",
     "pulseaudio",
     "cpu",
+    "custom/cpu-temp",
+    "custom/gpu-temp",
     "battery"
   ],
   "hyprland/workspaces": {
@@ -58,6 +60,30 @@
     "interval": 5,
     "format": "󰍛",
     "on-click": "omarchy-launch-or-focus-tui btop"
+  },
+  "custom/cpu-temp": {
+    "exec": "cpu-temp",
+    "interval": 5,
+    "format": "{}",
+    "tooltip": true
+  },
+  "custom/gpu-temp": {
+    "exec": "gpu-temp",
+    "interval": 5,
+    "format": "{}",
+    "tooltip": true
+  },
+  "custom/cpu-temp": {
+    "exec": "cpu-temp",
+    "interval": 5,
+    "format": "{}",
+    "tooltip": true
+  },
+  "custom/gpu-temp": {
+    "exec": "gpu-temp",
+    "interval": 5,
+    "format": "{}",
+    "tooltip": true
   },
   "clock": {
     "format": "{:L%A %H:%M}",

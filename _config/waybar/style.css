@@ -35,7 +35,9 @@
 #pulseaudio,
 #custom-omarchy,
 #custom-screenrecording-indicator,
-#custom-update {
+#custom-update,
+#custom-cpu-temp,
+#custom-gpu-temp {
   min-width: 12px;
   margin: 0 7.5px;
 }
@@ -80,8 +82,4 @@ tooltip {
 
 #custom-screenrecording-indicator.active {
   color: #a55555;
-}
-
-#battery.critical {
-  color: #ff0000;
 }

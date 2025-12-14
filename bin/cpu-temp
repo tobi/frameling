@@ -1,0 +1,12 @@
+#!/bin/bash
+# CPU Temperature script for Waybar
+
+# Get CPU temperature from thermal zones
+cpu_temp=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo "0")
+cpu_temp=$((cpu_temp / 1000))
+
+if [ "$cpu_temp" -gt 0 ]; then
+    echo "{\"text\": \"$cpu_temp°C\", \"tooltip\": \"CPU Temperature: $cpu_temp°C\"}"
+else
+    echo "{\"text\": \"N/A\", \"tooltip\": \"CPU temperature unavailable\"}"
+fi
