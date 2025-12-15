@@ -65,8 +65,8 @@ fi
 # Get current power profile
 power_profile=$(powerprofilesctl get 2>/dev/null || echo "unknown")
 
-# Only show if either temperature is 50°C or above
-if [ "$cpu_temp" -ge 50 ] || [ "$gpu_temp" -ge 50 ]; then
+# Only show if either temperature is 60°C or above
+if [ "$cpu_temp" -ge 60 ] || [ "$gpu_temp" -ge 60 ]; then
     # Format temperatures (handle missing GPU temp)
     cpu_display="${cpu_temp}°C"
     gpu_display="${gpu_temp:-N/A}°C"
