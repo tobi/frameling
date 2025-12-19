@@ -40,8 +40,9 @@ echo "" >> "$OUTPUT_FILE"
 
 # Track used hotkeys to avoid duplicates
 declare -A used_hotkeys
+declare -A bindings
 
-# Find all .desktop files
+# Find all .desktop files and collect bindings
 while IFS= read -r -d '' desktop_file; do
     # Extract fields
     name=$(grep '^Name=' "$desktop_file" | cut -d'=' -f2-)
@@ -60,10 +61,19 @@ while IFS= read -r -d '' desktop_file; do
         continue
     fi
     used_hotkeys[$hypr_hotkey]="$name"
-
-    # Generate binding
-    echo "bindd = $hypr_hotkey, $name, exec, webapp-launcher \"$desktop_file\"" >> "$OUTPUT_FILE"
+    bindings[$hypr_hotkey]="$name|$desktop_file"
 
 done < <(find "$DESKTOP_DIR" -name "*.desktop" -print0)
+
+# Generate all unbinds first
+for hypr_hotkey in "${!bindings[@]}"; do
+    echo "unbind = $hypr_hotkey" >> "$OUTPUT_FILE"
+done
+
+# Then generate all binds
+for hypr_hotkey in "${!bindings[@]}"; do
+    IFS='|' read -r name desktop_file <<< "${bindings[$hypr_hotkey]}"
+    echo "bindd = $hypr_hotkey, $name, exec, webapp-launcher \"$desktop_file\"" >> "$OUTPUT_FILE"
+done
 
 echo "Generated bindings in $OUTPUT_FILE"

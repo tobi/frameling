@@ -91,10 +91,13 @@ if [ -n "$class" ] && { [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || pgrep -x 
     fi
 fi
 
+# HDR flags are now set in ~/.config/chrome-flags.conf and ~/.config/chromium-flags.conf
+hdr_flags=""
+
 # No window found - launch browser in app mode
 if [ -n "$class" ]; then
     echo "Launching new browser window for $name (class: $class)"
 else
     echo "Launching new browser window for $name"
 fi
-hyprctl dispatch exec "$browser_exec --user-data-dir=$cache_dir --disable-features=InfiniteSessionRestore $profile_arg --app=\"$url\" $class_arg"
+hyprctl dispatch exec "$browser_exec --user-data-dir=$cache_dir $profile_arg --app=\"$url\" $class_arg $hdr_flags"

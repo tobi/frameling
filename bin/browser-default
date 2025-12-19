@@ -9,4 +9,7 @@ else
   private_flag="--incognito"
 fi
 
-exec setsid uwsm-app -- "$browser_exec" --disable-features=InfiniteSessionRestore "${@/--private/$private_flag}"
+# HDR flags are now set in ~/.config/chrome-flags.conf and ~/.config/chromium-flags.conf
+hdr_flags=""
+
+exec setsid uwsm-app -- "$browser_exec" $hdr_flags "${@/--private/$private_flag}"

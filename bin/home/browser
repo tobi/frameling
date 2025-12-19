@@ -14,4 +14,4 @@ browser_exec=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' ~/.local/share/applications/$de
 set -x 
 
 # Launch browser with proper session handling through uwsm-app
-exec setsid uwsm-app -- "$browser_exec" --user-data-dir=$cache_dir --disable-features=InfiniteSessionRestore --profile-directory="$profile_name" $@
+exec setsid uwsm-app -- "$browser_exec" --user-data-dir=$cache_dir --profile-directory="$profile_name" $@

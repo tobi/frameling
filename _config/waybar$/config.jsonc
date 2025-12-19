@@ -4,8 +4,8 @@
   "position": "top",
   "spacing": 0,
   "height": 26,
-  "modules-left": ["custom/omarchy", "hyprland/workspaces", "custom/temp-power", "custom/browser"],
-  "modules-center": ["clock", "custom/calendar", "custom/update", "custom/screenrecording-indicator"],
+  "modules-left": ["custom/omarchy", "hyprland/workspaces", "custom/temp-power"],
+  "modules-center": ["clock", "custom/update", "custom/screenrecording-indicator"],
   "modules-right": [
     "group/tray-expander",
     "bluetooth",
