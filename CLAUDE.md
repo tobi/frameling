@@ -268,4 +268,6 @@ Skills are located in `.claude/skills/`
 3. **Check debug log** for system issues: `/tmp/omarchy-debug.log`
 4. **Reference AGENTS.md** in subdirectories (e.g., `_config/hypr/AGENTS.md`) for component-specific guidelines
 5. **Use Omarchy CLI tools** - They handle refresh/reload operations correctly
-6. **Commit frequently** with clear, concise messages about configuration changes
+6. **NEVER run `omarchy-reload-hyprland` or `omarchy-config`** - These commands can cause issues; always use `omarchy-refresh-hyprland` instead
+7. **NEVER run `omarchy-refresh-*` programs** - These overwrite your custom frameling configs with Omarchy defaults; restart services manually instead (e.g., `pkill waybar && waybar &`)
+8. **Commit frequently** with clear, concise messages about configuration changes

@@ -29,8 +29,26 @@ if [ -z "$gpu_temp" ] && command -v sensors >/dev/null 2>&1; then
     gpu_temp=$(sensors 2>/dev/null | grep -m1 -E "(junction|edge)" | sed -n 's/.*+\([0-9.]*\)°C.*/\1/p' | cut -d'.' -f1)
 fi
 
+# Get current power profile
+power_profile=$(powerprofilesctl get 2>/dev/null || echo "unknown")
+
+# Get power profile name
+case "$power_profile" in
+    "power-saver")
+        profile_name="Power Saver"
+        ;;
+    "balanced")
+        profile_name="Balanced"
+        ;;
+    "performance")
+        profile_name="Performance"
+        ;;
+    *)
+        profile_name="Unknown"
+        ;;
+esac
+
 # Check for thermal throttling (AMD systems)
-throttled_recently=false
 if [ -d "/sys/devices/system/cpu/cpu0/thermal_throttle" ]; then
     # Check if any CPU core has been throttled in the last minute
     for cpu in /sys/devices/system/cpu/cpu*/thermal_throttle/core_throttled_time; do
@@ -62,37 +80,69 @@ else
     gpu_max=$gpu_temp
 fi
 
-# Get current power profile
-power_profile=$(powerprofilesctl get 2>/dev/null || echo "unknown")
+# Check if this is being called for icon-only mode
+if [ "$1" = "icon" ]; then
+    # Use the CPU icon for all profiles
+    profile_icon="󰍛"
 
-# Only show if either temperature is 60°C or above
-if [ "$cpu_temp" -ge 60 ] || [ "$gpu_temp" -ge 60 ]; then
-    # Format temperatures (handle missing GPU temp)
-    cpu_display="${cpu_temp}°C"
-    gpu_display="${gpu_temp:-N/A}°C"
+    # Determine color based on power profile
+    case "$power_profile" in
+        "power-saver")
+            color="#22c55e"  # green
+            ;;
+        "performance")
+            color="#eab308"  # yellow
+            ;;
+        *)
+            color=""  # default
+            ;;
+    esac
 
-    # Capitalize first letter of power profile
-    profile_display="$(echo "$power_profile" | sed 's/power-saver/Power Saver/; s/balanced/Balanced/; s/performance/Performance/')"
-
-    # Build tooltip with history and throttling info
-    tooltip="CPU: $cpu_temp°C (5min max: ${cpu_max}°C)\\n"
-    tooltip+="GPU: ${gpu_temp:-N/A}°C (5min max: ${gpu_max:-N/A}°C)\\n"
-    tooltip+="Profile: $profile_display\\n"
-
-    # Add throttling warning if applicable
-    if [ "$throttled_recently" = true ]; then
-        tooltip+="\\n⚠️  Thermal throttling detected recently"
+    # Apply color using Pango markup if color is set
+    if [ -n "$color" ]; then
+        profile_icon="<span color='$color'>$profile_icon</span>"
     fi
 
-    # Color coding for throttling
-    if [ "$throttled_recently" = true ]; then
-        text_class="warning"
-    else
-        text_class="normal"
-    fi
+    # Show the CPU icon with tooltip including temperatures and profile
+    tooltip="CPU: $cpu_temp°C\\n"
+    tooltip+="GPU: ${gpu_temp:-N/A}°C\\n"
+    tooltip+="Profile: $profile_name"
 
-    echo "{\"text\": \"CPU:$cpu_display GPU:$gpu_display [$profile_display]\", \"tooltip\": \"$tooltip\", \"class\": \"$text_class\"}"
-else
-    # Hide the module when temperatures are low
-    echo "{\"text\": \"\", \"tooltip\": \"\"}"
+    echo "{\"text\": \"$profile_icon\", \"tooltip\": \"$tooltip\"}"
+    exit 0
 fi
+
+# Always show temperatures with compact format
+cpu_display="${cpu_temp}°C"
+gpu_display="${gpu_temp:-N/A}°C"
+
+# Use the CPU icon for all profiles
+profile_icon="󰍛"
+
+# Determine color based on temperature (red for hot, yellow for warm, green for cool)
+if [ "$cpu_temp" -ge 80 ] || [ "$gpu_temp" -ge 80 ]; then
+    color="#ef4444"  # red for hot
+elif [ "$cpu_temp" -ge 70 ] || [ "$gpu_temp" -ge 70 ]; then
+    color="#f97316"  # orange for warm
+elif [ "$cpu_temp" -ge 60 ] || [ "$gpu_temp" -ge 60 ]; then
+    color="#eab308"  # yellow for moderate
+else
+    color="#22c55e"  # green for cool
+fi
+
+# Apply color using Pango markup
+profile_icon="<span color='$color'>$profile_icon</span>"
+
+# Build tooltip with values and power profile
+tooltip="CPU: $cpu_temp°C (5min max: ${cpu_max}°C)\\n"
+tooltip+="GPU: ${gpu_temp:-N/A}°C (5min max: ${gpu_max:-N/A}°C)\\n"
+tooltip+="Profile: $profile_name"
+
+# Add throttling warning if applicable
+if [ "$throttled_recently" = true ]; then
+    tooltip+="\\n\\n⚠️  Thermal throttling detected recently"
+    # Override color for throttling warning
+    profile_icon="<span color='#ff4444'>$profile_icon</span>"
+fi
+
+echo "{\"text\": \"CPU:$cpu_display GPU:$gpu_display $profile_icon\", \"tooltip\": \"$tooltip\"}"
