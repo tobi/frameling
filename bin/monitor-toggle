@@ -16,7 +16,7 @@ if [[ "$2" == "--dry-run" ]] || [[ "$1" == "--dry-run" ]]; then
 fi
 
 NUM=${NUM:-1}
-MONITORS_CONF="$HOME/frameling/hypr/monitors.conf"
+MONITORS_CONF="$HOME/frameling/_config/hypr$/monitors.conf"
 
 # Get the Nth monitor line from config
 MONITOR_LINE=$(grep -e "^monitor = " "$MONITORS_CONF" | sed -n "${NUM}p")
@@ -32,9 +32,37 @@ MONITOR_CONFIG="${MONITOR_LINE#monitor = }"
 # Get the monitor name (first field before comma)
 MONITOR_NAME="${MONITOR_CONFIG%%,*}"
 
+# Count active monitors
+ACTIVE_MONITORS=$(hyprctl monitors | grep -c "^Monitor")
+
 # Check if monitor is currently active
 if hyprctl monitors | grep -q "^Monitor $MONITOR_NAME"; then
-    # Monitor is enabled, disable it
+    # Monitor is enabled, check if we can safely disable it
+    if [[ $ACTIVE_MONITORS -le 1 ]]; then
+        echo "Error: Cannot disable the last active monitor"
+        exit 1
+    fi
+
+    # Get workspaces on this monitor
+    WORKSPACES_ON_MONITOR=$(hyprctl workspaces | grep "on monitor $MONITOR_NAME" | grep -o "ID [0-9]*" | grep -o "[0-9]*")
+
+    # Find an alternative monitor to move workspaces to
+    ALT_MONITOR=$(hyprctl monitors | grep "^Monitor" | grep -v "$MONITOR_NAME" | head -1 | sed 's/Monitor \([^ ]*\).*/\1/')
+
+    if [[ -n "$WORKSPACES_ON_MONITOR" && -n "$ALT_MONITOR" ]]; then
+        echo "Moving workspaces from $MONITOR_NAME to $ALT_MONITOR"
+        for WS_ID in $WORKSPACES_ON_MONITOR; do
+            if [[ "$DRY_RUN" == "false" ]]; then
+                hyprctl dispatch moveworkspacetomonitor "$WS_ID $ALT_MONITOR"
+            else
+                echo "[DRY-RUN] Would run: hyprctl dispatch moveworkspacetomonitor \"$WS_ID $ALT_MONITOR\""
+            fi
+        done
+        # Small delay to let workspace moves complete
+        [[ "$DRY_RUN" == "false" ]] && sleep 0.1
+    fi
+
+    # Now disable the monitor
     echo "Disabling $MONITOR_NAME"
     if [[ "$DRY_RUN" == "false" ]]; then
         hyprctl keyword monitor "$MONITOR_NAME,disable"
